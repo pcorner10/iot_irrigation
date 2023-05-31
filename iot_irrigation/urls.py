@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from api.views import post_sensor_data, get_sensor_data
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/data/post', post_sensor_data),
+    path('api/data/get', get_sensor_data),
 ]
