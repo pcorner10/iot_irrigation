@@ -46,5 +46,3 @@ def get_sensor_data(request):
 
   return JsonResponse(json_data, safe=False)
 
-
-
