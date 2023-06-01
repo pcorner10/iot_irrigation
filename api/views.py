@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import pandas as pd
 from .models import SensorData
+from sklearn.linear_model import LinearRegression
 
 # Create your views here.
 @csrf_exempt
@@ -47,22 +48,35 @@ def get_sensor_data(request):
   df = df[['temperature', 'humidity', 'lux', 'soil_moisture', 'time']]
   df.set_index('time', inplace=True)
 
+
+
   # compute the ratio of decrease of soil moisture
   df['soil_moisture_ratio'] = df['soil_moisture'].pct_change()
 
   # drop the first row
   df.dropna(inplace=True) 
 
-  y = df['soil_moisture_ratio']
-  X = df[['temperature', 'humidity', 'lux',"soil_moisture"]]
+  train_size = int(len(df) * 0.8)  # Usaremos el 80% de los datos para entrenamiento
+  train_data = df[:train_size]
+  test_data = df[train_size:]
 
-  
+  # Separar variables dependientes e independientes (como se mostró anteriormente)
+  X_train = train_data[['temperature', 'humidity', 'lux', 'soil_moisture']]
+  y_train = train_data['soil_moisture_ratio']
+  X_test = test_data[['temperature', 'humidity', 'lux', 'soil_moisture']]
+  y_test = test_data['soil_moisture_ratio']
 
+  # Crear y entrenar el modelo de regresión lineal (como se mostró anteriormente)
+  model = LinearRegression()
+  model.fit(X_train, y_train)
 
-  # convert dataframe to json
-  json_data = df.to_json(orient='records')
+  # Preparar los datos para la predicción del instante 11
+  new_data = df.loc[10].to_frame().T  # Suponiendo que el dato en el instante 10 está en la fila con etiqueta 10
 
+  # Realizar la predicción para el instante 11
+  prediction_11 = model.predict(new_data[['temperature', 'humidity', 'lux', 'soil_moisture']])
 
+  # retornar la predicción
+  return JsonResponse({'prediction': prediction_11[0]})
 
-  return JsonResponse(json_data, safe=False)
 
