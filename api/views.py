@@ -39,10 +39,30 @@ def get_sensor_data(request):
 
   # convert data to dataframes
   df = pd.DataFrame(list(data.values()))
-  print(df)
+
+  # column names: id, name, temperature, humidity, lux, soil_moisture, time 
+  # use soil_moisture as objetive variable
+  # use temperature, humidity, lux as features
+  # use time as index
+  df = df[['temperature', 'humidity', 'lux', 'soil_moisture', 'time']]
+  df.set_index('time', inplace=True)
+
+  # compute the ratio of decrease of soil moisture
+  df['soil_moisture_ratio'] = df['soil_moisture'].pct_change()
+
+  # drop the first row
+  df.dropna(inplace=True) 
+
+  y = df['soil_moisture_ratio']
+  X = df[['temperature', 'humidity', 'lux',"soil_moisture"]]
+
+  
+
 
   # convert dataframe to json
   json_data = df.to_json(orient='records')
+
+
 
   return JsonResponse(json_data, safe=False)
 
